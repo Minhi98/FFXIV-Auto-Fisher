@@ -12,9 +12,16 @@ from DirectXKeyCodes import PressKey, ReleaseKey
 def windowEnumerationHandler(hwnd, top_windows):
     top_windows.append((hwnd, win32gui.GetWindowText(hwnd)))
 
-def main(cast_line=0x02, hook=0x03, release=0x04, mooch=0x05, threshhold = 0.92):
-    PressKey(cast_line)
-    ReleaseKey(cast_line)
+def xivInput(key, delay=0.0):
+    focus_window()
+    PressKey(key)
+    ReleaseKey(key)
+    focus_window()
+    time.sleep(delay)
+
+def main(cast_line=0x02, hook=0x03, release=0x04, mooch=0x05, patience=0x07, quit=0x22, cordial=0x21,\
+    threshhold = 0.93, winX=1600, winY=900, script_view=True, use_skills=True, use_mooch=True):
+    xivInput(cast_line)
     can_press = False
     casted = True
     reset = 30
@@ -22,7 +29,7 @@ def main(cast_line=0x02, hook=0x03, release=0x04, mooch=0x05, threshhold = 0.92)
     template = cv2.imread('cast-light.png', 0)
     w,h = template.shape[::-1]
     while True:
-        current_frame =  np.array(ImageGrab.grab(bbox=(10,60,1600,950)))
+        current_frame =  np.array(ImageGrab.grab(bbox=(10+(int(winX/4)),60,int(winX*0.75),int(winY/1.5))))
         cf_gray = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
         if cv2.waitKey(25) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
@@ -39,30 +46,22 @@ def main(cast_line=0x02, hook=0x03, release=0x04, mooch=0x05, threshhold = 0.92)
             loc_memory.pop(0)
 
         current_animation = sense_motion(loc_memory)
+        cv2.putText(current_frame, str(current_animation) + " frame difference",\
+            (20,int((winX/3)-20)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,255,255), 2)
         if can_press and current_animation is not None:
             if current_animation == 0 and not casted:
                 print('0 frame, idle - attempt cast')
-                focus_on_game()
-                PressKey(cast_line)
-                ReleaseKey(cast_line)
-                time.sleep(1)
-                PressKey(cast_line)
-                ReleaseKey(cast_line)
-                time.sleep(1)
-                PressKey(cast_line)
-                ReleaseKey(cast_line)
-                time.sleep(1)
-                PressKey(cast_line)
-                ReleaseKey(cast_line)
-                casted = True
+                if use_skills:
+                    for x in range(2): xivInput(patience, 0.25)
+                    for x in range(2): xivInput(mooch, 0.25)
+                for x in range(2): xivInput(cast_line, 1)
+
                 can_press = False
+                casted = True
                 reset = 6
             elif current_animation > 4 or current_animation < -4 and casted:
                 print(str(current_animation) + " frame difference - Catching Bite")
-                focus_on_game()
-                for x in range(4): 
-                    PressKey(hook)
-                    ReleaseKey(hook)
+                for x in range(2): xivInput(hook, 0.5)
                 can_press = False
                 casted = False
                 reset = 30
@@ -72,7 +71,8 @@ def main(cast_line=0x02, hook=0x03, release=0x04, mooch=0x05, threshhold = 0.92)
             if reset == 0:
                 can_press = True
 
-        cv2.imshow('auto-fish', cv2.cvtColor(current_frame, cv2.COLOR_BGR2RGB))
+        if script_view:
+            cv2.imshow('auto-fish', cv2.cvtColor(current_frame, cv2.COLOR_BGR2RGB))
 
 
 def sense_motion(loc_memory):
@@ -85,17 +85,16 @@ def sense_motion(loc_memory):
         sub = sec_latest - latest
         return sub
 
-def focus_on_game():
+def focus_window(winName="FINAL FANTASY XIV"):
     results = []
     top_windows = []
     win32gui.EnumWindows(windowEnumerationHandler, top_windows)
     for i in top_windows:
-        if "FINAL FANTASY XIV" in i[1].upper():
-            print(i)
+        if winName in i[1].upper():
             win32gui.ShowWindow(i[0],5)
             win32gui.SetForegroundWindow(i[0])
             break
 
 if __name__ == "__main__":
-    focus_on_game()
+    focus_window()
     main()

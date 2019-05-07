@@ -1,3 +1,6 @@
+"""
+CREDIT TO: https://stackoverflow.com/questions/14489013/simulate-python-keypresses-for-controlling-a-game
+"""
 import ctypes
 import time
 
