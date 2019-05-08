@@ -5,26 +5,26 @@ import time
 import glob
 import os
 from pprint import pprint
-import win32gui
 import pyautogui
-from DirectXKeyCodes import PressKey, ReleaseKey
+from rotations import *
 
-def windowEnumerationHandler(hwnd, top_windows):
-    top_windows.append((hwnd, win32gui.GetWindowText(hwnd)))
+# Edit which rotations you are choosing here:
+def register_inputs(can_press, casted, reset, current_animation, \
+    biting_frame_diff=6):
+    if can_press and current_animation is not None:
+            if current_animation == 0 and not casted:
+                reset = level_grind_cast(reset=6)
+                can_press = False
+                casted = True
+            elif current_animation > biting_frame_diff or current_animation < -biting_frame_diff and casted:
+                reset = level_grind_hook(reset=30)
+                can_press = False
+                casted = False
+            return can_press, casted, reset
+    return can_press, casted, reset
 
-def xivInput(key, delay=0.0):
-    focus_window()
-    PressKey(key)
-    ReleaseKey(key)
-    focus_window()
-    time.sleep(delay)
-
-def main(cast_line=0x02, hook=0x03, release=0x04, mooch=0x05, patience=0x07, quit=0x22, cordial=0x21,\
-    threshhold = 0.93, winX=1600, winY=900, script_view=True, use_skills=True, use_mooch=True):
-    xivInput(cast_line)
-    can_press = False
-    casted = True
-    reset = 30
+def main(threshhold = 0.93, winX=1600, winY=900, script_view=True, use_skills=True, use_mooch=True):
+    can_press, casted, reset = pre_cast()
     loc_memory = [] #index [-1] is the latest location
     template = cv2.imread('cast-light.png', 0)
     w,h = template.shape[::-1]
@@ -46,25 +46,10 @@ def main(cast_line=0x02, hook=0x03, release=0x04, mooch=0x05, patience=0x07, qui
             loc_memory.pop(0)
 
         current_animation = sense_motion(loc_memory)
-        cv2.putText(current_frame, str(current_animation) + " frame difference",\
-            (20,int((winX/3)-20)), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,255,255), 2)
-        if can_press and current_animation is not None:
-            if current_animation == 0 and not casted:
-                print('0 frame, idle - attempt cast')
-                if use_skills:
-                    for x in range(2): xivInput(patience, 0.25)
-                    for x in range(2): xivInput(mooch, 0.25)
-                for x in range(2): xivInput(cast_line, 1)
+        cv2.putText(current_frame, str(current_animation) + " frame difference, Casted: " + str(casted) + ", can_press: " + str(can_press),\
+            (75, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255,255,255), 2)
 
-                can_press = False
-                casted = True
-                reset = 6
-            elif current_animation > 4 or current_animation < -4 and casted:
-                print(str(current_animation) + " frame difference - Catching Bite")
-                for x in range(2): xivInput(hook, 0.5)
-                can_press = False
-                casted = False
-                reset = 30
+        can_press, casted, reset = register_inputs(can_press, casted, reset, current_animation)
 
         if not can_press:
             reset -= 1
@@ -73,7 +58,6 @@ def main(cast_line=0x02, hook=0x03, release=0x04, mooch=0x05, patience=0x07, qui
 
         if script_view:
             cv2.imshow('auto-fish', cv2.cvtColor(current_frame, cv2.COLOR_BGR2RGB))
-
 
 def sense_motion(loc_memory):
     y_mem = []
@@ -85,16 +69,5 @@ def sense_motion(loc_memory):
         sub = sec_latest - latest
         return sub
 
-def focus_window(winName="FINAL FANTASY XIV"):
-    results = []
-    top_windows = []
-    win32gui.EnumWindows(windowEnumerationHandler, top_windows)
-    for i in top_windows:
-        if winName in i[1].upper():
-            win32gui.ShowWindow(i[0],5)
-            win32gui.SetForegroundWindow(i[0])
-            break
-
 if __name__ == "__main__":
-    focus_window()
     main()
