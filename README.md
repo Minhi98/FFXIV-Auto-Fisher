@@ -3,6 +3,7 @@
 ---
 
 Script is for automating fishing at a location, for level grinding - but also has support for input macroing.
+
 Requires: OpenCV2, PIL, win32gui, pyautogui and numpy
 
 rotations.py contains the buttons, options, and rotation methods.
