@@ -1,4 +1,4 @@
-# ffxiv-fishing-grind-script
+# Input Macroer for FFXIV Fishing
 
 ---
 
