@@ -6,27 +6,27 @@ import glob
 import os
 from pprint import pprint
 import pyautogui
+import rotations
 from rotations import *
 
 # Edit which rotations you are choosing here:
-def register_inputs(can_press, casted, reset, current_animation, \
-    biting_frame_diff=6):
+def register_inputs(can_press, casted, reset, current_animation):
     if can_press and current_animation is not None:
             if current_animation == 0 and not casted:
-                reset = level_grind_cast(reset=6)
+                reset = getattr(rotations, setRotation)()
                 can_press = False
                 casted = True
             elif current_animation > biting_frame_diff or current_animation < -biting_frame_diff and casted:
-                reset = level_grind_hook(reset=30)
+                reset = getattr(rotations, setHook)()
                 can_press = False
                 casted = False
             return can_press, casted, reset
     return can_press, casted, reset
 
-def main(threshhold = 0.93, winX=1600, winY=900, script_view=True, use_skills=True, use_mooch=True):
+def main():
     can_press, casted, reset = pre_cast()
     loc_memory = [] #index [-1] is the latest location
-    template = cv2.imread('cast-light.png', 0)
+    template = cv2.imread(templateImage, 0)
     w,h = template.shape[::-1]
     while True:
         current_frame =  np.array(ImageGrab.grab(bbox=(10+(int(winX/4)),60,int(winX*0.75),int(winY/1.5))))
@@ -56,8 +56,7 @@ def main(threshhold = 0.93, winX=1600, winY=900, script_view=True, use_skills=Tr
             if reset == 0:
                 can_press = True
 
-        if script_view:
-            cv2.imshow('auto-fish', cv2.cvtColor(current_frame, cv2.COLOR_BGR2RGB))
+        cv2.imshow('auto-fish', cv2.cvtColor(current_frame, cv2.COLOR_BGR2RGB))
 
 def sense_motion(loc_memory):
     y_mem = []
