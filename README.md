@@ -9,10 +9,11 @@ Requires: OpenCV2, PIL, win32gui, pyautogui and numpy
 rotations.py contains the buttons, options, and rotation methods.
 Run main.py or rotations.py with FFXIV open for this to work.
 
-# Demonstration Video
+Use at your own risk, this violates FFXIV Terms of Service.
+
+# Example Image
 
 ---
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=BpDnGR8Onfo
-" target="_blank"><img src="http://img.youtube.com/vi/BpDnGR8Onfo/0.jpg" 
-alt="" width="360" height="240" border="10" /></a>
+<img src="https://i.imgur.com/MP08WqT.png" 
+alt="" width="792" height="539" border="10" />
